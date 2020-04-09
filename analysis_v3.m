@@ -77,12 +77,12 @@ plot_countries{5} =  {'Italy','Netherlands','Germany','Austria','Switzerland'}
 plot_countries{6} =  {'Italy','Japan','Hubei','ChinaAll','Korea, South','Singapore'}
 
 
-plot_type = 2; % 1: absolute numbers 2: population fraction      3: population fraction and age-adjusted          
+plot_type = 3; % 1: absolute numbers 2: population fraction      3: population fraction and age-adjusted          
 smooth_kernel = 3; % number of days to run averaging kernel                
 
 
 for ip = 1 : length(plot_countries)
-    
+     
     pop_t = 0;
     deaths = table2array(dea(:,5:nt+4));
     
@@ -154,7 +154,10 @@ for ip = 1 : length(plot_countries)
     legend([reshape(repmat(plot_countries{ip},[2 1]),1,[]),'average'],'location','eastoutside')
     box on, axis square
     
-    saveas(hf,[num2str(plot_type) '-' num2str(ic) '.png'])
+    drawnow
+    saveas(hf,[num2str(plot_type) '-' num2str(ip) '.png'])
+   
+   % close(hf)
 end
 
 
