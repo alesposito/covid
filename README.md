@@ -1,3 +1,6 @@
+Run CAAT.m
+Check the header for options
+
 You can find the description of the results in a number of blog posts here:
 https://quantitative-biology.org/category/covid/
 
