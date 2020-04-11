@@ -1,3 +1,5 @@
+% A. Esposito
+
 %% COVID - age adjusted trends (CAAT)
 
 % LIST OF PLOTS
@@ -11,12 +13,13 @@ plot_countries{6} =  {'Italy','Japan','Hubei','ChinaAll','Republic of Korea','Si
 
 
 GitHubLink    = 'https://github.com/CSSEGISandData/COVID-19/archive/master.zip';
-covid_version = 'CAAT | CC-BY | A. Esposito (v4)';
+covid_version = 'CAAT | A. Esposito (v4.1)';
 
 folder        = './DATA/COVID-19-master/COVID-19-master/csse_covid_19_data/csse_covid_19_time_series/';
 dea_file      = 'time_series_covid19_deaths_global.csv';
 deaUS_file    = 'time_series_covid19_deaths_US.csv';
-UN_population = 'WPP2019_POP_F07_1_POPULATION_BY_AGE_BOTH_SEXES.xlsx';
+% UN_population = 'WPP2019_POP_F07_1_POPULATION_BY_AGE_BOTH_SEXES.xlsx';
+% UN population is downloaded automatically
 
 plot_type     = 3; % 1: absolute numbers 2: population fraction      3: population fraction and age-adjusted          
 smooth_kernel = 3; % number of days to run averaging kernel                
@@ -38,7 +41,15 @@ madj = @(m,p)sum(m.*p/sum(p));
 
 
 %% Load data
+warning off
 
+% Check if UN population data has been already downloaded
+if ~exist('DATA/UNpopulation.xlsx','file')
+   display('Downloading UN population data') 
+   mkdir('./DATA');
+   websave('./DATA/UNpopulation.xlsx','https://population.un.org/wpp/Download/Files/1_Indicators%20(Standard)/EXCEL_FILES/1_Population/WPP2019_POP_F07_1_POPULATION_BY_AGE_BOTH_SEXES.xlsx');
+   display('Population data stored in ./DATA/') 
+end
 
 choice = questdlg('Would you like to download the latest data from Johns Hopkins GitHub repository?',covid_version);
 switch lower(choice)
@@ -51,13 +62,13 @@ switch lower(choice)
         
     case 'yes'
         display('CAAT: updating dataset...')
-        %websave('./DATA/master.zip',)
         unzip(GitHubLink,'./DATA/COVID-19-master/')
         display('CAAT: update completed')
         
     otherwise
         error('option not supported')
 end
+
 
 %% read and parse international data
 dea = readtable([folder dea_file],'readvariablenames',true);
@@ -104,7 +115,7 @@ clear idx
 
 %% READ UN POPULATION DATA
  display('CAAT: reading UN population dataset...')
-[num_un text_un raw_un] = xlsread(['./DATA/' UN_population],'ESTIMATES');
+[num_un text_un raw_un] = xlsread('./DATA/UNpopulation.xlsx','ESTIMATES');
 
 %%     2020 estimates  
 idx = find(num_un(:,8)==2020);
