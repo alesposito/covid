@@ -1,6 +1,6 @@
 % A. Esposito
 
-%% COVID - age adjusted trends (CAAT 4.2)
+%% COVID - age adjusted trends (CAAT 4.3)
 
 % LIST OF PLOTS
    
@@ -12,20 +12,18 @@ plot_countries{5} =  {'Italy','Netherlands','Germany','Austria','Switzerland'};
 plot_countries{6} =  {'Italy','Japan','Hubei','ChinaAll','Republic of Korea','Singapore'};
 plot_countries{7} =  {'Italy','Hubei','Ireland','United Kingdom','Iceland'};
 plot_countries{8} =  {'Italy','Hubei','US','Russia','Turkey','United Kingdom'};
-plot_countries{9} =  {'Italy','Hubei','US','Brazil','Argentina','Mexico'};
+plot_countries{9} =  {'US','Brazil','Argentina','Mexico','Canada','Peru','Chile'};
 plot_countries{10} =  {'Italy','Bulgaria','Romania','Greece','Hungary','Poland'};
 plot_countries{11} =  {'Italy','United Kingdom','Germany','Denmark','Sweden'};
+plot_countries{12} =  {'ChinaAll','India','Russia','Pakistan','Bangladesh'};
 
 
 GitHubLink    = 'https://github.com/CSSEGISandData/COVID-19/archive/master.zip';
-covid_version = 'CAAT | A. Esposito (v4.2)';
+covid_version = 'CAAT | A. Esposito (v4.3)';
 
 folder        = './DATA/COVID-19-master/COVID-19-master/csse_covid_19_data/csse_covid_19_time_series/';
 dea_file      = 'time_series_covid19_deaths_global.csv';
 deaUS_file    = 'time_series_covid19_deaths_US.csv';
-% UN_population = 'WPP2019_POP_F07_1_POPULATION_BY_AGE_BOTH_SEXES.xlsx';
-% UN population is downloaded automatically
-
 plot_type     = 3; % 1: absolute numbers 2: population fraction      3: population fraction and age-adjusted          
 smooth_kernel = 3; % number of days to run averaging kernel                
 
@@ -33,6 +31,7 @@ smooth_kernel = 3; % number of days to run averaging kernel
 age =   [ 0         10          20          30          40          50          60      70      80];
 mor_h = [ .002      .002        .002        .01         .02         .04         .11     .26     .49];    % mortality estimates from hubei
 mor_c = [ .001      .001        .001        .002        .005        .01         .025    .06     .13];   % mortality estimates from rest of China
+
 % new rates - https://www.thelancet.com/pdfs/journals/laninf/PIIS1473-3099(20)30243-7.pdf
 mor_f = [ .0000161  .0000695    .000309     .000844     0.00161     0.00595     .0193   .0428   .078]; % mortality estimates from mainland China, corrected
 
@@ -109,8 +108,40 @@ nc = height(dea);
 dea.Lat = [];
 dea.Long = [];
 
-% Change name of Korea, South
+% Change name of countries in JH database to match UN naming
 dea.Country_Region(find(ismember(dea.Country_Region,'Korea, South')))={'Republic of Korea'};
+%dea.Country_Region(find(ismember(dea.Province_State,'Reunion')))={'Réunion'};
+dea.Country_Region(find(ismember(dea.Country_Region,'United Republic of Tanzania')))={'Tanzania'};
+dea.Country_Region(find(ismember(dea.Country_Region,'Congo (Brazzaville)' )))={'Congo'};
+dea.Country_Region(find(ismember(dea.Country_Region,'Congo (Kinshasa)')))={'Democratic Republic of the Congo'};
+dea.Country_Region(find(ismember(dea.Country_Region,'Cote d''Ivoire')))={'Côte d''Ivoire'};
+dea.Country_Region(find(ismember(dea.Country_Region,'Syria')))={'Syrian Arab Republic'};
+dea.Country_Region(find(ismember(dea.Country_Region,'Brunei')))={'Brunei Darussalam'};
+dea.Country_Region(find(ismember(dea.Country_Region,'Laos')))={'Lao People''s Democratic Republic'};
+dea.Country_Region(find(ismember(dea.Country_Region,'Burma')))={'Myammar'};
+dea.Country_Region(find(ismember(dea.Country_Region,'Vietnam')))={'Viet Nam'};
+dea.Country_Region(find(ismember(dea.Country_Region,'Bolivia')))={'Bolivia (Plurinational State of)'};
+dea.Country_Region(find(ismember(dea.Country_Region,'Venezuela')))={'Venezuela (Bolivarian Republic of)'};
+dea.Country_Region(find(ismember(dea.Country_Region,'Moldova')))={'Republic of Moldova'};
+
+
+% Aggregate data from Canada
+idxCanada = find(ismember(table2array(dea(:,2)),'Canada'));
+deaCanada = sum(table2array(dea(idxCanada,3:end)),1);
+dea(idxCanada,:)=[];
+dea(height(dea)+1,2)   = cell2table({'Canada'});
+dea(height(dea),3:end) = array2table(deaCanada);
+nc = height(dea);
+
+
+
+% Aggregate data from Australia
+idxAustralia = find(ismember(table2array(dea(:,2)),'Australia'));
+deaAustralia = sum(table2array(dea(idxAustralia,3:end)),1);
+dea(idxAustralia,:)=[];
+dea(height(dea)+1,2)   = cell2table({'Australia'});
+dea(height(dea),3:end) = array2table(deaAustralia);
+nc = height(dea);
 
 %% read and parse US data
 deaUS = readtable([folder deaUS_file],'readvariablenames',true);
@@ -171,7 +202,7 @@ for ip = 1 : length(plot_countries)
     % Scan each region/country within each list
     for ir=1:nr
         tmp_idx = find(strcmp(dea.Country_Region,plot_countries{ip}{ir}));
-        % fint the region/country
+        % find the region/country
         switch length(tmp_idx)
             case 1 % unique country name identified
                 idxJH(ir)=tmp_idx;
@@ -233,8 +264,8 @@ for ip = 1 : length(plot_countries)
     set(ha1,'xscale','log','yscale','log')
     
     hb = bar(ha2,[deaths(:,end) pop_s'-deaths(:,end)],'stacked','facecolor','flat')
-    hb(1).CData = 0.2*col(1:size(hb(1).CData,1),:)
-    hb(2).CData = col(1:size(hb(2).CData,1),:)
+    hb(1).CData = 0.2*col(1:size(hb(1).CData,1),:);
+    hb(2).CData = col(1:size(hb(2).CData,1),:);
     
     % plot reference line
     switch plot_type
@@ -267,6 +298,87 @@ for ip = 1 : length(plot_countries)
    
    % close(hf)
 end
+
+%% Bar plots for relative fatalities within the population at risk
+[pop_risk idxJH cur_deaths we1_deaths we2_deaths]= deal([]);
+[pop_name region_not_found] = deal({});
+counter = 0;
+
+% Search UN population data to estimate size of population at risk in each
+% listed region
+
+for ic=1:numel(UN_NAME)
+    country_name = UN_NAME{ic};
+    pop_risk(ic) = sum(UN_DATA(find(ismember(UN_NAME,country_name)),:))*madj(mor_s,UN_DATA(find(ismember(UN_NAME,country_name)),:)); 
+    
+    % search correspondent entry in John Hopkins dataset
+    % not all UN entry will have a JH entry, catch errors
+    try
+        tmp_idx = find(strcmp(dea.Country_Region,country_name));
+    
+        switch length(tmp_idx)
+            case 1 % unique country name identified
+                idxJH(ic)=tmp_idx;
+            case 0 % probably not a country, scan region
+                idxJH(ic) = find(strcmp(dea.Province_State,country_name));
+            otherwise % probably multiple territories, identify country
+                idxJH(ic) = tmp_idx(find(strcmp(dea.Province_State(tmp_idx),'')));        
+        end
+        
+        cur_deaths(ic) = table2array(dea(idxJH(ic),end));    % current fatalities
+        we1_deaths(ic) = table2array(dea(idxJH(ic),end-7));  % a week ago
+        we2_deaths(ic) = table2array(dea(idxJH(ic),end-14)); % 2 weeks ago 
+        we3_deaths(ic) = table2array(dea(idxJH(ic),end-21)); % 3 weeks ago 
+    catch
+        % for debugging, store list of unmatched regions
+        counter = counter + 1;
+        region_not_found{counter} = country_name;
+        cur_deaths(ic) = NaN;
+    end
+end
+
+% top n_max countries (no... it is not a race! just vis purposes)
+n_max = 50;
+
+% fatalities relative to population at risk
+p_deaths  = 100*cur_deaths./pop_risk;
+% weekly increase of relative fatalities
+d1_deaths = 100*(cur_deaths-we1_deaths)./pop_risk;
+d2_deaths = 100*(we1_deaths-we2_deaths)./pop_risk;
+d3_deaths = 100*(we2_deaths-we3_deaths)./pop_risk;
+
+countries = UN_NAME;
+
+% remove records from unmatched regions
+countries(isnan(p_deaths))=[];
+d1_deaths(isnan(p_deaths))=[];
+d2_deaths(isnan(p_deaths))=[];
+d3_deaths(isnan(p_deaths))=[];
+p_deaths(isnan(p_deaths)) =[];
+
+[dmb p_ord] = sort(p_deaths,'desc');  % tanking for relative fatalities
+[dmb d_ord] = sort(d1_deaths,'desc'); % ranking for fatality rate, according to current week
+
+d_ord = p_ord;
+
+% display
+figure
+subplot(1,2,1)
+barh(p_deaths(p_ord(1:n_max)))
+set(gca,'ytick',(1:n_max),'yticklabel',countries(p_ord(1:n_max)),'ydir','reverse','xgrid','on')
+%xtickangle(90)
+title('relative fatalities in the population at risk')
+xlabel('fraction (%)')
+
+subplot(1,2,2)
+barh([d1_deaths(d_ord(1:n_max)); d2_deaths(d_ord(1:n_max)); d3_deaths(d_ord(1:n_max))]','stacked')
+set(gca,'ytick',(1:n_max),'yticklabel',countries(d_ord(1:n_max)),'ydir','reverse','xgrid','on')
+%xtickangle(90)
+title('weekly rate of increase')
+xlabel('fraction (%)')
+legend({'Current week','Last week','2 weeks ago'})
+
+
 
 
 
