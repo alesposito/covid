@@ -1,6 +1,6 @@
 % A. Esposito
 
-%% COVID - age adjusted trends (CAAT 4.3)
+%% COVID - age adjusted trends (CAAT 4.4)
 
 % LIST OF PLOTS
    
@@ -19,7 +19,7 @@ plot_countries{12} =  {'ChinaAll','India','Russia','Pakistan','Bangladesh'};
 
 
 GitHubLink    = 'https://github.com/CSSEGISandData/COVID-19/archive/master.zip';
-covid_version = 'CAAT | A. Esposito (v4.3)';
+covid_version = 'CAAT | A. Esposito (v4.4)';
 
 folder        = './DATA/COVID-19-master/COVID-19-master/csse_covid_19_data/csse_covid_19_time_series/';
 dea_file      = 'time_series_covid19_deaths_global.csv';
@@ -329,6 +329,7 @@ for ic=1:numel(UN_NAME)
         we1_deaths(ic) = table2array(dea(idxJH(ic),end-7));  % a week ago
         we2_deaths(ic) = table2array(dea(idxJH(ic),end-14)); % 2 weeks ago 
         we3_deaths(ic) = table2array(dea(idxJH(ic),end-21)); % 3 weeks ago 
+        we4_deaths(ic) = table2array(dea(idxJH(ic),end-28)); % 4 weeks ago 
     catch
         % for debugging, store list of unmatched regions
         counter = counter + 1;
@@ -346,6 +347,7 @@ p_deaths  = 100*cur_deaths./pop_risk;
 d1_deaths = 100*(cur_deaths-we1_deaths)./pop_risk;
 d2_deaths = 100*(we1_deaths-we2_deaths)./pop_risk;
 d3_deaths = 100*(we2_deaths-we3_deaths)./pop_risk;
+d4_deaths = 100*(we3_deaths-we4_deaths)./pop_risk;
 
 countries = UN_NAME;
 
@@ -354,30 +356,31 @@ countries(isnan(p_deaths))=[];
 d1_deaths(isnan(p_deaths))=[];
 d2_deaths(isnan(p_deaths))=[];
 d3_deaths(isnan(p_deaths))=[];
+d4_deaths(isnan(p_deaths))=[];
 p_deaths(isnan(p_deaths)) =[];
 
-[dmb p_ord] = sort(p_deaths,'desc');  % tanking for relative fatalities
+[dmb p_ord] = sort(p_deaths,'desc');  % ranking for relative fatalities
 [dmb d_ord] = sort(d1_deaths,'desc'); % ranking for fatality rate, according to current week
 
-d_ord = p_ord;
+%d_ord = p_ord;
 
 % display
 figure
+
 subplot(1,2,1)
 barh(p_deaths(p_ord(1:n_max)))
 set(gca,'ytick',(1:n_max),'yticklabel',countries(p_ord(1:n_max)),'ydir','reverse','xgrid','on')
 %xtickangle(90)
-title('relative fatalities in the population at risk')
+title('relative fatalities in the population at risk (since January)')
 xlabel('fraction (%)')
 
 subplot(1,2,2)
-barh([d1_deaths(d_ord(1:n_max)); d2_deaths(d_ord(1:n_max)); d3_deaths(d_ord(1:n_max))]','stacked')
+barh([d1_deaths(d_ord(1:n_max)); d2_deaths(d_ord(1:n_max)); d3_deaths(d_ord(1:n_max)); d4_deaths(d_ord(1:n_max))]','stacked')
 set(gca,'ytick',(1:n_max),'yticklabel',countries(d_ord(1:n_max)),'ydir','reverse','xgrid','on')
 %xtickangle(90)
-title('weekly rate of increase')
+title('weekly rate of increase (last month overview)')
 xlabel('fraction (%)')
-legend({'Current week','Last week','2 weeks ago'})
-
+legend({'Current week','Last week','2 weeks ago','3 weeks ago'})
 
 
 
